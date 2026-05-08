@@ -47,7 +47,7 @@ class LeadEnrichment:
     
     def _guess_industry(self, company_name: str, domain: str) -> str:
         """Simple industry classification based on keywords"""
-        name_lower = (company_name + " " + domain).lower()
+        name_lower = f"{company_name or ''} {domain or ''}".lower()
         
         # Industry keyword mapping
         keywords = {
