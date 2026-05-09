@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { Plus } from "lucide-react";
+import { useState } from "react";
 import { useCreateLead } from "@/hooks/useLeads";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,59 +14,84 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function AddLeadModal() {
-  const [open, setOpen] = useState(false);
+interface AddLeadModalProps {
+  /** Controlled open state — if provided, the trigger button is still rendered. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function AddLeadModal({ open, onOpenChange }: AddLeadModalProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [formData, setFormData] = useState({
     company_name: "",
     domain: "",
     contact_person: "",
   });
 
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
+  const setOpen = isControlled ? onOpenChange! : setInternalOpen;
+
   const createLeadMutation = useCreateLead();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    createLeadMutation.mutate(formData, {
-      onSuccess: () => {
-        setOpen(false);
-        setFormData({ company_name: "", domain: "", contact_person: "" });
+    createLeadMutation.mutate(
+      {
+        company_name: formData.company_name,
+        domain: formData.domain || undefined,
+        contact_person: formData.contact_person || undefined,
       },
-    });
+      {
+        onSuccess: (res) => {
+          if (res.success) {
+            setOpen(false);
+            setFormData({ company_name: "", domain: "", contact_person: "" });
+          }
+        },
+      }
+    );
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button className="gap-2" id="add-lead-trigger-btn">
           <Plus className="h-4 w-4" />
           Add Lead
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[420px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Add New Lead</DialogTitle>
             <DialogDescription>
-              Enter the details of the company you want to track and enrich.
+              Enter the company details. You can enrich it with AI after adding.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="company_name">Company Name</Label>
+          <div className="grid gap-4 py-5">
+            <div className="grid gap-1.5">
+              <Label htmlFor="add-company-name">Company Name</Label>
               <Input
-                id="company_name"
+                id="add-company-name"
                 placeholder="e.g. Acme Corp"
                 required
+                autoFocus
                 value={formData.company_name}
                 onChange={(e) =>
                   setFormData({ ...formData, company_name: e.target.value })
                 }
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="domain">Domain (Optional)</Label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="add-domain">
+                Domain{" "}
+                <span className="text-muted-foreground font-normal">
+                  (optional)
+                </span>
+              </Label>
               <Input
-                id="domain"
+                id="add-domain"
                 placeholder="e.g. acme.com"
                 value={formData.domain}
                 onChange={(e) =>
@@ -74,10 +99,15 @@ export function AddLeadModal() {
                 }
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="contact_person">Contact Person (Optional)</Label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="add-contact">
+                Contact Person{" "}
+                <span className="text-muted-foreground font-normal">
+                  (optional)
+                </span>
+              </Label>
               <Input
-                id="contact_person"
+                id="add-contact"
                 placeholder="e.g. Jane Doe"
                 value={formData.contact_person}
                 onChange={(e) =>
@@ -94,8 +124,14 @@ export function AddLeadModal() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createLeadMutation.isPending}>
-              {createLeadMutation.isPending ? "Creating..." : "Create Lead"}
+            <Button
+              type="submit"
+              disabled={
+                createLeadMutation.isPending || !formData.company_name.trim()
+              }
+              id="submit-add-lead-btn"
+            >
+              {createLeadMutation.isPending ? "Creating…" : "Create Lead"}
             </Button>
           </DialogFooter>
         </form>

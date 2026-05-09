@@ -142,6 +142,19 @@ def generate_email(
     )
 
 
+# ── DELETE /lead/{lead_id} ─────────────────────────
+@router.delete("/lead/{lead_id}", response_model=APIResponse[dict])
+def delete_lead(lead_id: str, db: Database = Depends(get_db)):
+    """Delete a lead."""
+    logger.info(f"Deleting lead: {lead_id}")
+    result = db.delete_lead(lead_id)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+        
+    return APIResponse(success=True, message="Lead deleted successfully")
+
+
 # ── GET /stats ──────────────────────────────────────
 
 @router.get("/stats", response_model=APIResponse[StatsOut])

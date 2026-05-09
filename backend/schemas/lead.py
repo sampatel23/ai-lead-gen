@@ -41,17 +41,29 @@ class LeadOut(BaseModel):
     email: Optional[str] = None
     generated_email: Optional[str] = None
     created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
     class Config:
         from_attributes = True
 
+
+class IndustryCount(BaseModel):
+    name: str
+    value: int
+
+class DateCount(BaseModel):
+    date: str
+    count: int
 
 class StatsOut(BaseModel):
     """GET /stats response"""
     total: int
     enriched: int
     pending: int
+    failed: int
     with_emails: int
+    industry_distribution: List[IndustryCount] = []
+    leads_over_time: List[DateCount] = []
 
 
 class APIResponse(BaseModel, Generic[T]):

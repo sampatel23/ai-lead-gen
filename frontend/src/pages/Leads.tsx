@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { AddLeadModal } from "@/components/leads/AddLeadModal";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 
 export function Leads() {
+  const [modalOpen, setModalOpen] = useState(false);
+
   return (
     <div className="flex flex-col gap-8 max-w-7xl mx-auto w-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -11,12 +14,12 @@ export function Leads() {
             Track, enrich, and manage your prospective clients with AI.
           </p>
         </div>
-        <AddLeadModal />
+        <AddLeadModal open={modalOpen} onOpenChange={setModalOpen} />
       </div>
 
       <div className="min-h-[500px]">
-        <LeadsTable />
+        <LeadsTable onAddLead={() => setModalOpen(true)} />
       </div>
     </div>
-  )
+  );
 }

@@ -101,22 +101,60 @@ class Database:
             print(f"❌ Error fetching pending leads: {e}")
             return []
 
+    def delete_lead(self, lead_id: str) -> Dict:
+        """Delete lead from database"""
+        try:
+            response = self.supabase.table("leads")\
+                .delete()\
+                .eq("id", lead_id)\
+                .execute()
+
+            return {"success": True, "message": "Lead deleted successfully"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def get_stats(self) -> Dict:
         """Get database statistics"""
         try:
             all_leads = self.get_all_leads()
 
             total = len(all_leads)
-            enriched = len([l for l in all_leads if l.get('enrichment_status') == 'completed'])
-            pending = total - enriched
+            enriched = len([l for l in all_leads if l.get('enrichment_status') in ('completed', 'enriched')])
+            failed = len([l for l in all_leads if l.get('enrichment_status') == 'failed'])
+            pending = total - enriched - failed
             with_emails = len([l for l in all_leads if l.get('generated_email')])
+
+            # Industry distribution
+            industry_counts = {}
+            for l in all_leads:
+                ind = l.get('industry')
+                if ind:
+                    industry_counts[ind] = industry_counts.get(ind, 0) + 1
+            
+            industry_distribution = [{"name": k, "value": v} for k, v in industry_counts.items()]
+
+            # Leads over time
+            from collections import defaultdict
+            date_counts = defaultdict(int)
+            for l in all_leads:
+                created_at = l.get('created_at')
+                if created_at:
+                    # Parse date part assuming format 'YYYY-MM-DDTHH:MM:SS...'
+                    date_str = created_at.split('T')[0]
+                    date_counts[date_str] += 1
+            
+            # Sort by date
+            leads_over_time = [{"date": k, "count": v} for k, v in sorted(date_counts.items())]
 
             return {
                 "total": total,
                 "enriched": enriched,
-                "pending": pending,
-                "with_emails": with_emails
+                "pending": max(0, pending), # ensure it doesn't go below 0 due to edge cases
+                "failed": failed,
+                "with_emails": with_emails,
+                "industry_distribution": industry_distribution,
+                "leads_over_time": leads_over_time
             }
         except Exception as e:
             print(f"❌ Error getting stats: {e}")
-            return {"total": 0, "enriched": 0, "pending": 0, "with_emails": 0}
+            return {"total": 0, "enriched": 0, "pending": 0, "failed": 0, "with_emails": 0, "industry_distribution": [], "leads_over_time": []}

@@ -11,6 +11,11 @@ export const getStats = async (): Promise<APIResponse<Stats>> => {
   return data;
 };
 
+export const getLead = async (id: string): Promise<APIResponse<Lead>> => {
+  const { data } = await apiClient.get(`/lead/${id}`);
+  return data;
+};
+
 export const createLead = async (payload: LeadCreate): Promise<APIResponse<Lead>> => {
   const { data } = await apiClient.post("/lead", payload);
   return data;
@@ -23,5 +28,9 @@ export const enrichLead = async (id: string): Promise<APIResponse<Lead>> => {
 
 export const generateEmail = async (id: string): Promise<APIResponse<{lead_id: string, generated_email: string}>> => {
   const { data } = await apiClient.post(`/generate-email/${id}`);
+  return data;
+};
+export const deleteLead = async (id: string): Promise<APIResponse<{message: string}>> => {
+  const { data } = await apiClient.delete(`/lead/${id}`);
   return data;
 };

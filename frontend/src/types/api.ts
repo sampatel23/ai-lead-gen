@@ -6,13 +6,22 @@ export interface APIResponse<T> {
   error: string | null;
 }
 
+export type LeadEnrichmentStatus =
+  | "pending"
+  | "processing"
+  | "enriched"
+  | "completed"
+  | "failed"
+  | "email_generated"
+  | null;
+
 export interface Lead {
   id: string;
   company_name: string;
   domain: string | null;
   contact_person: string | null;
   status: string | null;
-  enrichment_status: string | null;
+  enrichment_status: LeadEnrichmentStatus;
   industry: string | null;
   company_size: string | null;
   company_summary: string | null;
@@ -21,13 +30,27 @@ export interface Lead {
   email: string | null;
   generated_email: string | null;
   created_at: string;
+  updated_at: string | null;
+}
+
+export interface IndustryCount {
+  name: string;
+  value: number;
+}
+
+export interface DateCount {
+  date: string;
+  count: number;
 }
 
 export interface Stats {
   total: number;
   enriched: number;
   pending: number;
+  failed: number;
   with_emails: number;
+  industry_distribution: IndustryCount[];
+  leads_over_time: DateCount[];
 }
 
 export interface LeadCreate {
