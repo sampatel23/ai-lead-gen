@@ -10,9 +10,9 @@ no code duplication, just wiring.
 
 from functools import lru_cache
 
-from src.database import Database
-from src.enrichment import LeadEnrichment
-from src.email_generator import EmailGenerator
+from core.database import Database
+from core.enrichment import LeadEnrichment
+from core.email_generator import EmailGenerator
 
 
 @lru_cache()

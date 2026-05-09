@@ -1,29 +1,34 @@
+"""
+AI email generation service.
+
+Uses Groq (LLaMA) to generate personalized cold emails and pain point analysis.
+All prompts and generation logic stay exactly as originally written.
+"""
+
 from groq import Groq
-from dotenv import load_dotenv
 import os
 
-load_dotenv()
 
 class EmailGenerator:
     def __init__(self):
         api_key = os.getenv("GROQ_API_KEY")
-        
+
         if not api_key:
             raise ValueError("❌ GROQ_API_KEY must be set in .env file")
-        
+
         self.client = Groq(api_key=api_key)
         # Updated model names for Groq 0.4.1
         self.model = "llama-3.1-8b-instant"
-    
+
     def generate_cold_email(self, lead_data: dict) -> str:
         """Generate personalized cold email using AI"""
-        
+
         company_name = lead_data.get('company_name', 'the company')
         industry = lead_data.get('industry', 'your industry')
         pain_points = lead_data.get('pain_points', 'common business challenges')
         contact_person = lead_data.get('contact_person', 'there')
         domain = lead_data.get('domain', '')
-        
+
         prompt = f"""
 You are a B2B sales expert. Write a personalized cold email for lead generation.
 
@@ -52,7 +57,7 @@ BODY:
 
 Do not add any extra commentary. Write the email now:
 """
-        
+
         try:
             chat_completion = self.client.chat.completions.create(
                 messages=[
@@ -71,18 +76,18 @@ Do not add any extra commentary. Write the email now:
                 top_p=1,
                 stream=False
             )
-            
+
             email = chat_completion.choices[0].message.content
             return email.strip()
-        
+
         except Exception as e:
             return f"❌ Error generating email: {str(e)}\n\nPlease check your GROQ_API_KEY and internet connection."
-    
+
     def generate_pain_points(self, company_name: str, industry: str = None) -> str:
         """Generate likely pain points for a company"""
-        
+
         industry_context = f"in the {industry} industry" if industry else ""
-        
+
         prompt = f"""
 Based on the company name "{company_name}" {industry_context}, identify 3 specific business pain points or challenges they likely face.
 
@@ -94,7 +99,7 @@ Example format: "High customer acquisition costs, Manual data entry slowing grow
 
 Pain points for {company_name}:
 """
-        
+
         try:
             chat_completion = self.client.chat.completions.create(
                 messages=[
@@ -113,40 +118,12 @@ Pain points for {company_name}:
                 top_p=1,
                 stream=False
             )
-            
+
             pain_points = chat_completion.choices[0].message.content.strip()
             # Clean up the response
             pain_points = pain_points.replace('"', '').replace('\n', ' ')
             return pain_points
-        
+
         except Exception as e:
             print(f"❌ Error generating pain points: {e}")
             return "Operational inefficiencies, High costs, Scaling challenges"
-
-# Test the email generator
-if __name__ == "__main__":
-    try:
-        generator = EmailGenerator()
-        print("✅ Email generator initialized\n")
-        
-        # Test data
-        test_lead = {
-            "company_name": "Acme Corp",
-            "domain": "acmecorp.com",
-            "industry": "SaaS",
-            "contact_person": "Sarah Johnson",
-            "pain_points": "High customer churn, Low email open rates, Manual lead qualification"
-        }
-        
-        print("🤖 Generating pain points...\n")
-        pain_points = generator.generate_pain_points("Stripe", "Fintech")
-        print(f"💡 Generated pain points:\n{pain_points}\n")
-        print("="*60 + "\n")
-        
-        print("📧 Generating personalized email...\n")
-        email = generator.generate_cold_email(test_lead)
-        print(email)
-        print("\n" + "="*60)
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")

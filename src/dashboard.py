@@ -5,9 +5,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import streamlit as st
 import pandas as pd
-from src.database import Database
-from src.enrichment import LeadEnrichment
-from src.email_generator import EmailGenerator
+from core.database import Database
+from core.enrichment import LeadEnrichment
+from core.email_generator import EmailGenerator
 import time
 
 # ---------------------------------------------------

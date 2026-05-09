@@ -7,9 +7,9 @@ No business logic lives here — just HTTP ↔ service translation.
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.database import Database
-from src.enrichment import LeadEnrichment
-from src.email_generator import EmailGenerator
+from core.database import Database
+from core.enrichment import LeadEnrichment
+from core.email_generator import EmailGenerator
 
 from backend.dependencies import get_db, get_enrichment, get_email_generator
 from backend.schemas.lead import LeadCreate, LeadOut, StatsOut, APIResponse
