@@ -7,6 +7,10 @@ All prompts and generation logic stay exactly as originally written.
 
 from groq import Groq
 import os
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class EmailGenerator:
@@ -19,6 +23,68 @@ class EmailGenerator:
         self.client = Groq(api_key=api_key)
         # Updated model names for Groq 0.4.1
         self.model = "llama-3.1-8b-instant"
+
+    def analyze_company_context(self, company_name: str, website_text: str) -> dict | None:
+        """
+        Analyze scraped website text to extract structured company context.
+        Uses Groq JSON mode for reliable extraction.
+        Returns a dict or None if analysis fails.
+        """
+        prompt = f"""
+You are a master business analyst. I am providing you with the text scraped from the website of a company named "{company_name}".
+
+Website Text:
+\"\"\"
+{website_text}
+\"\"\"
+
+Analyze the text and extract the following information. You MUST return a valid JSON object matching exactly this structure:
+{{
+    "industry": "Specific industry (e.g., B2B SaaS, Fintech, Healthcare IT)",
+    "company_summary": "A concise 1-2 sentence description of exactly what the company does and their core value proposition.",
+    "pain_points": "A comma-separated list of 3 specific, realistic pain points this type of company faces.",
+    "outreach_angle": "A concise 1 sentence angle for sales outreach on how our generic B2B software/service could help them."
+}}
+
+Do not include any Markdown formatting, explanations, or extra text. Output ONLY raw JSON.
+"""
+
+        try:
+            chat_completion = self.client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a precise data extraction API that outputs ONLY valid JSON."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                model=self.model,
+                temperature=0.2, # Low temperature for more deterministic/factual output
+                max_tokens=300,  # Keep output concise
+                top_p=1,
+                stream=False,
+                response_format={"type": "json_object"}
+            )
+            
+            result_text = chat_completion.choices[0].message.content.strip()
+            
+            # Ensure it is a dictionary
+            data = json.loads(result_text)
+            
+            # Validate required keys are present
+            required_keys = {"industry", "company_summary", "pain_points", "outreach_angle"}
+            if not required_keys.issubset(data.keys()):
+                logger.warning(f"AI returned incomplete JSON structure for {company_name}")
+                return None
+                
+            return data
+            
+        except Exception as e:
+            logger.warning(f"Error during AI context analysis for {company_name}: {e}")
+            return None
 
     def generate_cold_email(self, lead_data: dict) -> str:
         """Generate personalized cold email using AI"""

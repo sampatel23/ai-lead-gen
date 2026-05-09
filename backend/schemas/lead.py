@@ -29,6 +29,8 @@ class LeadOut(BaseModel):
     enrichment_status: Optional[str] = None
     industry: Optional[str] = None
     company_size: Optional[str] = None
+    company_summary: Optional[str] = None
+    outreach_angle: Optional[str] = None
     pain_points: Optional[str] = None
     email: Optional[str] = None
     generated_email: Optional[str] = None
