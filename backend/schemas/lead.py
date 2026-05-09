@@ -4,16 +4,22 @@ These are the API contracts — they don't replace your existing business logic.
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Generic, TypeVar, List
 from datetime import datetime
 
+T = TypeVar("T")
 
 # ── Request Models ──────────────────────────────────
 
 class LeadCreate(BaseModel):
     """POST /lead request body"""
     company_name: str = Field(..., min_length=1, examples=["Stripe"])
-    domain: Optional[str] = Field(None, examples=["stripe.com"])
+    # Permissive regex: just ensures there's at least one dot in the middle, and no spaces.
+    domain: Optional[str] = Field(
+        None, 
+        pattern=r"^[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
+        examples=["stripe.com", "api.stripe.com"]
+    )
     contact_person: Optional[str] = Field(None, examples=["Patrick Collison"])
 
 
@@ -48,9 +54,9 @@ class StatsOut(BaseModel):
     with_emails: int
 
 
-class APIResponse(BaseModel):
-    """Standard wrapper for all API responses"""
+class APIResponse(BaseModel, Generic[T]):
+    """Standard generic wrapper for all API responses"""
     success: bool
-    data: Optional[dict | list] = None
+    data: Optional[T] = None
     message: Optional[str] = None
     error: Optional[str] = None
