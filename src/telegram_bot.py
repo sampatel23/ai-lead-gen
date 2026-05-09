@@ -1,3 +1,12 @@
+"""
+Telegram bot for AI Lead Generation.
+
+Architecture: Bot → FastAPI API → Core Services → Supabase/Groq
+
+The bot is a thin presentation layer. All business logic is accessed
+through the FastAPI backend via LeadAPIClient.
+"""
+
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -10,18 +19,16 @@ from telegram.ext import (
 from dotenv import load_dotenv
 import os
 
-from core.database import Database
-from core.enrichment import LeadEnrichment
-from core.email_generator import EmailGenerator
+from src.api_client import LeadAPIClient
 
 load_dotenv()
 
 
 class LeadGenBot:
     def __init__(self):
-        self.db = Database()
-        self.enrichment = LeadEnrichment()
-        self.email_gen = EmailGenerator()
+        self.api = LeadAPIClient(
+            base_url=os.getenv("API_BASE_URL", "http://localhost:8000")
+        )
 
         self.token = os.getenv("TELEGRAM_BOT_TOKEN")
 
@@ -122,7 +129,7 @@ Let's get started 🎯
                 )
                 return
 
-            result = self.db.add_lead(
+            result = self.api.create_lead(
                 company_name,
                 domain,
                 contact_person
@@ -174,7 +181,7 @@ View all leads:
         """Show all leads"""
 
         try:
-            leads = self.db.get_all_leads()
+            leads = self.api.get_all_leads()
 
             if not leads:
                 await update.message.reply_text(
@@ -253,14 +260,7 @@ View all leads:
 
             partial_id = parts[1].strip()
 
-            all_leads = self.db.get_all_leads()
-
-            lead = None
-
-            for item in all_leads:
-                if item["id"].startswith(partial_id):
-                    lead = item
-                    break
+            lead = self.api.find_lead_by_partial_id(partial_id)
 
             if not lead:
                 await update.message.reply_text(
@@ -285,14 +285,12 @@ View all leads:
                 parse_mode="Markdown"
             )
 
-            enriched = self.enrichment.enrich_lead(lead)
+            result = self.api.enrich_lead(lead["id"])
 
-            self.db.update_lead(
-                lead["id"],
-                enriched
-            )
+            if result["success"]:
+                enriched = result["data"]
 
-            message = f"""
+                message = f"""
 ✅ *Lead Enriched Successfully*
 
 🏢 *Company:* {enriched['company_name']}
@@ -312,10 +310,14 @@ View all leads:
 `/email {partial_id}`
             """
 
-            await update.message.reply_text(
-                message,
-                parse_mode="Markdown"
-            )
+                await update.message.reply_text(
+                    message,
+                    parse_mode="Markdown"
+                )
+            else:
+                await update.message.reply_text(
+                    f"❌ Error: {result['error']}"
+                )
 
         except Exception as e:
             await update.message.reply_text(
@@ -342,14 +344,7 @@ View all leads:
 
             partial_id = parts[1].strip()
 
-            all_leads = self.db.get_all_leads()
-
-            lead = None
-
-            for item in all_leads:
-                if item["id"].startswith(partial_id):
-                    lead = item
-                    break
+            lead = self.api.find_lead_by_partial_id(partial_id)
 
             if not lead:
                 await update.message.reply_text(
@@ -373,17 +368,18 @@ View all leads:
                 parse_mode="Markdown"
             )
 
-            email = self.email_gen.generate_cold_email(lead)
+            result = self.api.generate_email(lead["id"])
 
-            self.db.update_lead(
-                lead["id"],
-                {"generated_email": email}
-            )
-
-            await update.message.reply_text(
-                f"📧 *Generated Email*\n\n{email}",
-                parse_mode="Markdown"
-            )
+            if result["success"]:
+                email = result["data"]["generated_email"]
+                await update.message.reply_text(
+                    f"📧 *Generated Email*\n\n{email}",
+                    parse_mode="Markdown"
+                )
+            else:
+                await update.message.reply_text(
+                    f"❌ Error: {result['error']}"
+                )
 
         except Exception as e:
             await update.message.reply_text(
@@ -398,7 +394,7 @@ View all leads:
         """Show statistics"""
 
         try:
-            stats = self.db.get_stats()
+            stats = self.api.get_stats()
 
             message = f"""
 📊 *Statistics*
