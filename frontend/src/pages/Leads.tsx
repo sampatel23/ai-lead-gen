@@ -1,17 +1,21 @@
+import { AddLeadModal } from "@/components/leads/AddLeadModal";
+import { LeadsTable } from "@/components/leads/LeadsTable";
+
 export function Leads() {
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-8 max-w-7xl mx-auto w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Leads</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage and enrich your prospective clients.
+          <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
+          <p className="text-muted-foreground mt-1">
+            Track, enrich, and manage your prospective clients with AI.
           </p>
         </div>
-        <div className="h-10 w-24 bg-primary/20 rounded-md animate-pulse" />
+        <AddLeadModal />
       </div>
-      <div className="rounded-xl border bg-card p-8 h-[600px] flex items-center justify-center">
-        <p className="text-muted-foreground">Leads Data Table</p>
+
+      <div className="min-h-[500px]">
+        <LeadsTable />
       </div>
     </div>
   )
