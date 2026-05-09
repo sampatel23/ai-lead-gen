@@ -94,34 +94,43 @@ Do not include any Markdown formatting, explanations, or extra text. Output ONLY
         pain_points = lead_data.get('pain_points', 'common business challenges')
         contact_person = lead_data.get('contact_person', 'there')
         domain = lead_data.get('domain', '')
+        
+        # Extract new contextual enrichment fields if they exist
+        company_summary = lead_data.get('company_summary')
+        outreach_angle = lead_data.get('outreach_angle')
+
+        # Build contextual prompt segment
+        context_segment = f"- Industry: {industry}\n- Pain Points: {pain_points}\n"
+        if company_summary:
+            context_segment += f"- What they do: {company_summary}\n"
+        if outreach_angle:
+            context_segment += f"- Why we are reaching out: {outreach_angle}\n"
 
         prompt = f"""
-You are a B2B sales expert. Write a personalized cold email for lead generation.
+You are an elite B2B sales copywriter. Write a highly realistic, punchy cold email.
 
 Lead Information:
 - Company: {company_name}
-- Domain: {domain}
-- Industry: {industry}
 - Contact Person: {contact_person}
-- Pain Points: {pain_points}
+{context_segment}
 
-Requirements:
-1. Write a catchy subject line
-2. Reference their industry/company specifically
-3. Address one specific pain point
-4. Propose clear value proposition
-5. Include soft call-to-action (book a call/demo)
-6. Professional but conversational tone
-7. Keep email body under 150 words
-8. Sound human, not robotic
+Email Structure Rules:
+1. Subject line: 1 to 4 words maximum. Casual, entirely lowercase. No punctuation.
+2. Hook (Sentence 1): Start immediately with a relevant observation based on what they do.
+3. Pitch (Sentence 2): Address their specific pain point and state our value proposition simply.
+4. CTA (Sentence 3): A soft, low-friction question (e.g., "Open to exploring this?", "Worth a chat?", "Opposed to taking a look?").
+
+Strict Negative Constraints (DO NOT USE THESE):
+- Do NOT say "I was impressed by" or "I noticed" or "I hope this finds you well".
+- Do NOT use buzzwords like "revolutionize", "streamline", "synergy", "unlock potential", "elevate".
+- Do NOT use exclamation marks.
+- Keep the entire email body strictly under 60 words. Short and sharp.
 
 Format your response exactly as:
 SUBJECT: [your subject line here]
 
 BODY:
 [your email body here]
-
-Do not add any extra commentary. Write the email now:
 """
 
         try:
@@ -129,7 +138,7 @@ Do not add any extra commentary. Write the email now:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert B2B sales copywriter who writes cold emails that get 30%+ response rates. Your emails are personalized, concise, and valuable."
+                        "content": "You write modern, ultra-concise B2B cold emails that sound like they were quickly typed by a human executive."
                     },
                     {
                         "role": "user",
@@ -138,7 +147,7 @@ Do not add any extra commentary. Write the email now:
                 ],
                 model=self.model,
                 temperature=0.7,
-                max_tokens=600,
+                max_tokens=300,
                 top_p=1,
                 stream=False
             )
