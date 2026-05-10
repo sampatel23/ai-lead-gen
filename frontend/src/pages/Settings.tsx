@@ -54,10 +54,31 @@ const defaultSettings: AppSettings = {
   lastConnectionStatus: "idle",
 };
 
+function normalizeLegacySettings(input: Partial<AppSettings>): Partial<AppSettings> {
+  const normalized = { ...input };
+
+  if (normalized.defaultTone === "friendly") {
+    normalized.defaultTone = "casual";
+  } else if (normalized.defaultTone === "direct") {
+    normalized.defaultTone = "concise";
+  }
+
+  if (normalized.maxEmailLength === "detailed") {
+    normalized.maxEmailLength = "long";
+  }
+
+  return normalized;
+}
+
 export function Settings() {
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem("appSettings");
-    return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+    if (!saved) {
+      return defaultSettings;
+    }
+
+    const parsed = normalizeLegacySettings(JSON.parse(saved) as Partial<AppSettings>);
+    return { ...defaultSettings, ...parsed };
   });
 
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -245,9 +266,9 @@ export function Settings() {
                 <SelectValue placeholder="Select length" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="short">Short (&lt; 100 words)</SelectItem>
-                <SelectItem value="medium">Medium (~150 words)</SelectItem>
-                <SelectItem value="detailed">Detailed (&gt; 200 words)</SelectItem>
+                <SelectItem value="short">Short (&lt; 60 words)</SelectItem>
+                <SelectItem value="medium">Medium (&lt; 120 words)</SelectItem>
+                <SelectItem value="long">Long (&lt; 200 words)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -297,8 +318,7 @@ export function Settings() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="professional">Professional</SelectItem>
-                  <SelectItem value="friendly">Friendly</SelectItem>
-                  <SelectItem value="direct">Direct & Assertive</SelectItem>
+                  <SelectItem value="casual">Casual</SelectItem>
                   <SelectItem value="concise">Concise</SelectItem>
                 </SelectContent>
               </Select>

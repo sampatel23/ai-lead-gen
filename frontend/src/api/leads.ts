@@ -1,5 +1,11 @@
 import { apiClient } from "./client";
-import type { APIResponse, Lead, Stats, LeadCreate } from "../types/api";
+import type {
+  APIResponse,
+  Lead,
+  Stats,
+  LeadCreate,
+  GenerateEmailSettingsPayload,
+} from "../types/api";
 
 export const getLeads = async (): Promise<APIResponse<Lead[]>> => {
   const { data } = await apiClient.get("/leads");
@@ -26,8 +32,11 @@ export const enrichLead = async (id: string): Promise<APIResponse<Lead>> => {
   return data;
 };
 
-export const generateEmail = async (id: string): Promise<APIResponse<{lead_id: string, generated_email: string}>> => {
-  const { data } = await apiClient.post(`/generate-email/${id}`);
+export const generateEmail = async (
+  id: string,
+  payload?: GenerateEmailSettingsPayload
+): Promise<APIResponse<{ lead_id: string; generated_email: string }>> => {
+  const { data } = await apiClient.post(`/generate-email/${id}`, payload);
   return data;
 };
 export const deleteLead = async (id: string): Promise<APIResponse<{message: string}>> => {

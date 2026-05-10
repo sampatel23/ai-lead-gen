@@ -8,11 +8,7 @@ Strictly limits scraping to the homepage (and optionally /about) to remain fast.
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
-import logging
-
-# Basic logging setup for the scraper
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from backend.logger import logger
 
 class WebsiteScraper:
     def __init__(self, timeout: int = 10, max_chars: int = 4000):
@@ -122,14 +118,14 @@ class WebsiteScraper:
 if __name__ == "__main__":
     scraper = WebsiteScraper()
     test_domain = "stripe.com"
-    print(f"Testing scraper on {test_domain}...\n")
-    
+    logger.info(f"Testing scraper on {test_domain}...")
+
     result = scraper.scrape_domain(test_domain)
-    
+
     if result:
-        print(f"SUCCESS! Extracted {len(result)} characters.\n")
-        print("--- SNIPPET ---")
-        print(result[:500] + "...")
-        print("---------------")
+        logger.info(f"SUCCESS! Extracted {len(result)} characters.")
+        logger.info("--- SNIPPET ---")
+        logger.info(result[:500] + "...")
+        logger.info("---------------")
     else:
-        print("FAILED to scrape domain.")
+        logger.error("FAILED to scrape domain.")

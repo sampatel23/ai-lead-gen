@@ -13,7 +13,13 @@ from core.enrichment import LeadEnrichment
 from core.email_generator import EmailGenerator
 
 from backend.dependencies import get_db, get_enrichment, get_email_generator
-from backend.schemas.lead import LeadCreate, LeadOut, StatsOut, APIResponse
+from backend.schemas.lead import (
+    LeadCreate,
+    LeadOut,
+    StatsOut,
+    APIResponse,
+    GenerateEmailRequest,
+)
 from backend.logger import logger
 
 router = APIRouter(tags=["Leads"])
@@ -111,6 +117,7 @@ def enrich_lead(
 @router.post("/generate-email/{lead_id}", response_model=APIResponse[dict])
 def generate_email(
     lead_id: str,
+    payload: GenerateEmailRequest | None = None,
     db: Database = Depends(get_db),
     email_gen: EmailGenerator = Depends(get_email_generator),
 ):
@@ -129,8 +136,19 @@ def generate_email(
                    f"POST /enrich/{lead_id} first.",
         )
 
-    # Uses your existing EmailGenerator.generate_cold_email() — no new logic
-    email = email_gen.generate_cold_email(lead)
+    if payload and payload.lead_id and payload.lead_id != lead_id:
+        raise HTTPException(status_code=400, detail="lead_id in body must match URL")
+
+    tone = payload.tone if payload else "professional"
+    cta_strength = payload.cta_strength if payload else "moderate"
+    max_length = payload.max_length if payload else "medium"
+
+    email = email_gen.generate_cold_email(
+        lead,
+        tone=tone,
+        cta_strength=cta_strength,
+        max_length=max_length,
+    )
     db.update_lead(lead_id, {"generated_email": email})
     
     logger.info(f"Email successfully generated for lead: {lead_id}")

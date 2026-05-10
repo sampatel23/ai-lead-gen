@@ -1,5 +1,5 @@
 import { useStats } from "@/hooks/useLeads";
-import { Users, Sparkles, Mail, Clock, AlertTriangle, Briefcase } from "lucide-react";
+import { Users, Sparkles, Mail, Clock, Briefcase } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AreaChart,
@@ -230,7 +230,7 @@ export function Dashboard() {
                     }}
                   />
                   <Bar dataKey="value" name="Leads" radius={[0, 4, 4, 0]}>
-                    {industryData.map((entry, index) => (
+                    {(stats?.industry_distribution || []).map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}

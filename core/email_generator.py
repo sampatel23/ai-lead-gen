@@ -8,9 +8,7 @@ All prompts and generation logic stay exactly as originally written.
 from groq import Groq
 import os
 import json
-import logging
-
-logger = logging.getLogger(__name__)
+from backend.logger import logger
 
 
 class EmailGenerator:
@@ -23,6 +21,134 @@ class EmailGenerator:
         self.client = Groq(api_key=api_key)
         # Updated model names for Groq 0.4.1
         self.model = "llama-3.1-8b-instant"
+
+    @staticmethod
+    def _normalize_tone(tone: str | None) -> str:
+        return tone if tone in {"concise", "professional", "casual"} else "professional"
+
+    @staticmethod
+    def _normalize_cta_strength(cta_strength: str | None) -> str:
+        return cta_strength if cta_strength in {"soft", "moderate", "strong"} else "moderate"
+
+    @staticmethod
+    def _normalize_max_length(max_length: str | None) -> str:
+        return max_length if max_length in {"short", "medium", "long"} else "medium"
+
+    @staticmethod
+    def _tone_instruction(tone: str) -> str:
+        rules = {
+            "concise": (
+                "Write ultra-short sentences with minimal fluff and very quick readability. "
+                "Keep wording tight and direct."
+            ),
+            "professional": (
+                "Use polished business language with a slightly formal, executive-friendly tone."
+            ),
+            "casual": (
+                "Use conversational, human-sounding language with lighter structure while staying credible."
+            ),
+        }
+        return rules[tone]
+
+    @staticmethod
+    def _cta_instruction(cta_strength: str) -> str:
+        rules = {
+            "soft": (
+                "End with a soft, low-pressure CTA like 'Open to exploring this?' or 'Worth discussing?'"
+            ),
+            "moderate": (
+                "End with a moderate CTA like 'Worth a quick call next week?' or 'Interested in a short conversation?'"
+            ),
+            "strong": (
+                "End with a direct meeting ask and stronger scheduling push (without sounding rude)."
+            ),
+        }
+        return rules[cta_strength]
+
+    @staticmethod
+    def _length_instruction(max_length: str) -> tuple[int, str]:
+        rules = {
+            "short": (60, "Keep the email body under 60 words."),
+            "medium": (120, "Keep the email body under 120 words."),
+            "long": (200, "Keep the email body under 200 words."),
+        }
+        return rules[max_length]
+
+    def build_email_prompts(
+        self,
+        lead_data: dict,
+        tone: str = "professional",
+        cta_strength: str = "moderate",
+        max_length: str = "medium",
+    ) -> tuple[str, str, int]:
+        tone = self._normalize_tone(tone)
+        cta_strength = self._normalize_cta_strength(cta_strength)
+        max_length = self._normalize_max_length(max_length)
+
+        max_words, length_instruction = self._length_instruction(max_length)
+        tone_instruction = self._tone_instruction(tone)
+        cta_instruction = self._cta_instruction(cta_strength)
+
+        company_name = lead_data.get('company_name', 'the company')
+        industry = lead_data.get('industry', 'your industry')
+        pain_points = lead_data.get('pain_points', 'common business challenges')
+        contact_person = lead_data.get('contact_person', 'there')
+
+        company_summary = lead_data.get('company_summary')
+        outreach_angle = lead_data.get('outreach_angle')
+
+        context_segment = f"- Industry: {industry}\n- Pain Points: {pain_points}\n"
+        if company_summary:
+            context_segment += f"- What they do: {company_summary}\n"
+        if outreach_angle:
+            context_segment += f"- Why we are reaching out: {outreach_angle}\n"
+
+        system_prompt = f"""
+You write modern B2B cold emails with high realism and clear business value.
+
+Generation controls:
+- Tone: {tone}. {tone_instruction}
+- CTA strength: {cta_strength}. {cta_instruction}
+- Max length: {max_length}. {length_instruction}
+
+Honor these controls strictly while keeping the email natural.
+"""
+
+        concise_override = ""
+        if tone == "concise" and max_length != "short":
+            concise_override = (
+                "- Because tone is concise, prefer a 40-60 word body unless extra detail is truly needed.\n"
+            )
+
+        user_prompt = f"""
+You are an elite B2B sales copywriter. Write a highly realistic, punchy cold email.
+
+Lead Information:
+- Company: {company_name}
+- Contact Person: {contact_person}
+{context_segment}
+
+Email Structure Rules:
+1. Subject line: 1 to 4 words maximum. Casual, entirely lowercase. No punctuation.
+2. Hook (Sentence 1): Start immediately with a relevant observation based on what they do.
+3. Pitch (Sentence 2): Address their specific pain point and state our value proposition simply.
+4. CTA (final sentence): Follow the configured CTA strength.
+
+Strict Negative Constraints (DO NOT USE THESE):
+- Do NOT say "I was impressed by" or "I noticed" or "I hope this finds you well".
+- Do NOT use buzzwords like "revolutionize", "streamline", "synergy", "unlock potential", "elevate".
+- Do NOT use exclamation marks.
+- Keep the entire email body under {max_words} words.
+{concise_override}
+
+Format your response exactly as:
+SUBJECT: [your subject line here]
+
+BODY:
+[your email body here]
+"""
+
+        return system_prompt, user_prompt, max_words
 
     def analyze_company_context(self, company_name: str, website_text: str) -> dict | None:
         """
@@ -86,59 +212,27 @@ Do not include any Markdown formatting, explanations, or extra text. Output ONLY
             logger.warning(f"Error during AI context analysis for {company_name}: {e}")
             return None
 
-    def generate_cold_email(self, lead_data: dict) -> str:
+    def generate_cold_email(
+        self,
+        lead_data: dict,
+        tone: str = "professional",
+        cta_strength: str = "moderate",
+        max_length: str = "medium",
+    ) -> str:
         """Generate personalized cold email using AI"""
-
-        company_name = lead_data.get('company_name', 'the company')
-        industry = lead_data.get('industry', 'your industry')
-        pain_points = lead_data.get('pain_points', 'common business challenges')
-        contact_person = lead_data.get('contact_person', 'there')
-        domain = lead_data.get('domain', '')
-        
-        # Extract new contextual enrichment fields if they exist
-        company_summary = lead_data.get('company_summary')
-        outreach_angle = lead_data.get('outreach_angle')
-
-        # Build contextual prompt segment
-        context_segment = f"- Industry: {industry}\n- Pain Points: {pain_points}\n"
-        if company_summary:
-            context_segment += f"- What they do: {company_summary}\n"
-        if outreach_angle:
-            context_segment += f"- Why we are reaching out: {outreach_angle}\n"
-
-        prompt = f"""
-You are an elite B2B sales copywriter. Write a highly realistic, punchy cold email.
-
-Lead Information:
-- Company: {company_name}
-- Contact Person: {contact_person}
-{context_segment}
-
-Email Structure Rules:
-1. Subject line: 1 to 4 words maximum. Casual, entirely lowercase. No punctuation.
-2. Hook (Sentence 1): Start immediately with a relevant observation based on what they do.
-3. Pitch (Sentence 2): Address their specific pain point and state our value proposition simply.
-4. CTA (Sentence 3): A soft, low-friction question (e.g., "Open to exploring this?", "Worth a chat?", "Opposed to taking a look?").
-
-Strict Negative Constraints (DO NOT USE THESE):
-- Do NOT say "I was impressed by" or "I noticed" or "I hope this finds you well".
-- Do NOT use buzzwords like "revolutionize", "streamline", "synergy", "unlock potential", "elevate".
-- Do NOT use exclamation marks.
-- Keep the entire email body strictly under 60 words. Short and sharp.
-
-Format your response exactly as:
-SUBJECT: [your subject line here]
-
-BODY:
-[your email body here]
-"""
+        system_prompt, prompt, _ = self.build_email_prompts(
+            lead_data,
+            tone=tone,
+            cta_strength=cta_strength,
+            max_length=max_length,
+        )
 
         try:
             chat_completion = self.client.chat.completions.create(
                 messages=[
                     {
                         "role": "system",
-                        "content": "You write modern, ultra-concise B2B cold emails that sound like they were quickly typed by a human executive."
+                        "content": system_prompt
                     },
                     {
                         "role": "user",
@@ -200,5 +294,5 @@ Pain points for {company_name}:
             return pain_points
 
         except Exception as e:
-            print(f"❌ Error generating pain points: {e}")
+            logger.error(f"❌ Error generating pain points: {e}")
             return "Operational inefficiencies, High costs, Scaling challenges"

@@ -12,14 +12,6 @@ import {
   LabelList,
 } from "recharts";
 
-const COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-];
-
 const STATUS_COLORS = {
   Enriched: "var(--chart-2)",
   Pending: "var(--chart-4)",
@@ -34,8 +26,6 @@ export function Analytics() {
     { name: "Pending", value: stats?.pending ?? 0 },
     { name: "Failed", value: stats?.failed ?? 0 },
   ].filter((item) => item.value > 0);
-
-  const industryData = stats?.industry_distribution || [];
 
   return (
     <div className="flex flex-col gap-8 max-w-7xl mx-auto w-full">

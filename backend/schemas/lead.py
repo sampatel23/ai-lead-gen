@@ -6,6 +6,7 @@ These are the API contracts — they don't replace your existing business logic.
 from pydantic import BaseModel, Field
 from typing import Optional, Generic, TypeVar, List
 from datetime import datetime
+from typing import Literal
 
 T = TypeVar("T")
 
@@ -21,6 +22,14 @@ class LeadCreate(BaseModel):
         examples=["stripe.com", "api.stripe.com"]
     )
     contact_person: Optional[str] = Field(None, examples=["Patrick Collison"])
+
+
+class GenerateEmailRequest(BaseModel):
+    """Optional settings-aware payload for POST /generate-email/{lead_id}."""
+    lead_id: Optional[str] = Field(None, examples=["123"])
+    tone: Literal["concise", "professional", "casual"] = "professional"
+    cta_strength: Literal["soft", "moderate", "strong"] = "moderate"
+    max_length: Literal["short", "medium", "long"] = "medium"
 
 
 # ── Response Models ─────────────────────────────────

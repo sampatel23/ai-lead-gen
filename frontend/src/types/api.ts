@@ -58,3 +58,10 @@ export interface LeadCreate {
   domain?: string;
   contact_person?: string;
 }
+
+export interface GenerateEmailSettingsPayload {
+  lead_id: string;
+  tone: "concise" | "professional" | "casual";
+  cta_strength: "soft" | "moderate" | "strong";
+  max_length: "short" | "medium" | "long";
+}

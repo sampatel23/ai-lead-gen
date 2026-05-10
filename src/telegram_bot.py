@@ -22,6 +22,7 @@ import os
 from src.api_client import LeadAPIClient
 
 load_dotenv()
+from backend.logger import logger
 
 
 class LeadGenBot:
@@ -430,8 +431,8 @@ View all leads:
     def run(self):
         """Start bot"""
 
-        print("🤖 Starting Telegram Bot...")
-        print("✅ Bot is running")
+        logger.info("🤖 Starting Telegram Bot...")
+        logger.info("✅ Bot is running")
 
         app = (
             Application.builder()
@@ -474,8 +475,8 @@ View all leads:
             )
         )
 
-        print("📲 Open Telegram and send /start")
-        print("Press Ctrl+C to stop\n")
+        logger.info("📲 Open Telegram and send /start")
+        logger.info("Press Ctrl+C to stop\n")
 
         app.run_polling(
             allowed_updates=Update.ALL_TYPES
@@ -488,7 +489,7 @@ if __name__ == "__main__":
         bot.run()
 
     except KeyboardInterrupt:
-        print("\n👋 Bot stopped")
+        logger.info("\n👋 Bot stopped")
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        logger.error(f"❌ Error: {e}")

@@ -12,6 +12,7 @@ import requests
 from typing import Dict
 import re
 import os
+from backend.logger import logger
 
 
 class LeadEnrichment:
@@ -27,21 +28,21 @@ class LeadEnrichment:
         domain = lead_data.get('domain', '')
         contact_person = lead_data.get('contact_person', '')
 
-        print(f"Enriching: {company_name}")
+        logger.info(f"Enriching: {company_name}")
 
         ai_context = None
 
         # 1. PRIMARY PATH: Contextual AI Web Scraping
         if domain:
-            print(f"  Scraping {domain}...")
+            logger.info(f"  Scraping {domain}...")
             website_text = self.scraper.scrape_domain(domain)
 
             if website_text:
-                print("  Scrape successful. Analyzing context...")
+                logger.info("  Scrape successful. Analyzing context...")
                 ai_context = self.email_gen.analyze_company_context(company_name, website_text)
 
         if ai_context:
-            print("  Contextual analysis successful")
+            logger.info("  Contextual analysis successful")
             enriched['industry'] = ai_context.get('industry', 'Professional Services')
             enriched['company_summary'] = ai_context.get('company_summary', '')
             enriched['pain_points'] = ai_context.get('pain_points', '')
@@ -49,19 +50,19 @@ class LeadEnrichment:
         else:
             # 2. FALLBACK PATH: Heuristics
             if domain:
-                print("  Scraping or AI analysis failed. Falling back to heuristics...")
+                logger.warning("  Scraping or AI analysis failed. Falling back to heuristics...")
             else:
-                print("  No domain provided. Using heuristic enrichment...")
+                logger.info("  No domain provided. Using heuristic enrichment...")
 
             enriched['industry'] = self._guess_industry(company_name, domain)
-            print(f"  Guessed Industry: {enriched['industry']}")
+            logger.info(f"  Guessed Industry: {enriched['industry']}")
 
-            print(f"  Generating generic pain points...")
+            logger.info(f"  Generating generic pain points...")
             enriched['pain_points'] = self.email_gen.generate_pain_points(
                 company_name,
                 enriched['industry']
             )
-            print(f"  Generic pain points generated")
+            logger.info(f"  Generic pain points generated")
 
             # These fields won't exist in fallback mode
             enriched['company_summary'] = None
@@ -69,15 +70,15 @@ class LeadEnrichment:
 
         # 3. COMMON: Estimate company size
         enriched['company_size'] = self._estimate_size(company_name)
-        print(f"  Company size: {enriched['company_size']}")
+        logger.info(f"  Company size: {enriched['company_size']}")
 
         # 4. COMMON: Try to find email pattern (with Hunter.io stub)
         if domain:
             enriched['email'] = self._guess_email(contact_person, domain)
-            print(f"  Email: {enriched['email']}")
+            logger.info(f"  Email: {enriched['email']}")
 
         enriched['enrichment_status'] = 'completed'
-        print(f"Enrichment complete for {company_name}\n")
+        logger.info(f"Enrichment complete for {company_name}\n")
 
         return enriched
 
@@ -143,7 +144,7 @@ class LeadEnrichment:
                 # but if the real API failed, it would catch and fallback below.
                 pass
             except Exception as e:
-                print(f"  ⚠️ Hunter.io API failed: {e}. Falling back to guessing...")
+                logger.warning(f"  ⚠️ Hunter.io API failed: {e}. Falling back to guessing...")
 
         # Clean the name
         contact_person = contact_person.strip()

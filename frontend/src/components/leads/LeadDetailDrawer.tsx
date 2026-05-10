@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Building2,
   Globe,
@@ -7,7 +6,6 @@ import {
   Clock,
   Sparkles,
   Mail,
-  RotateCcw,
   Trash2,
   RefreshCw,
   Loader2,
@@ -25,7 +23,6 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeadStatusBadge } from "./LeadStatusBadge";
 import { EmailDisplay } from "./EmailDisplay";
@@ -34,7 +31,6 @@ import {
   useGenerateEmail,
   useDeleteLead,
 } from "@/hooks/useLeads";
-import { cn } from "@/lib/utils";
 import type { Lead } from "@/types/api";
 
 interface LeadDetailDrawerProps {

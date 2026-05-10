@@ -8,6 +8,7 @@ All business logic stays exactly as originally written.
 from supabase import create_client, Client
 import os
 from typing import Optional, List, Dict
+from backend.logger import logger
 
 
 class Database:
@@ -54,7 +55,7 @@ class Database:
             return response.data if response.data else []
 
         except Exception as e:
-            print(f"❌ Error fetching leads: {e}")
+            logger.error(f"❌ Error fetching leads: {e}")
             return []
 
     def get_lead_by_id(self, lead_id: str) -> Optional[Dict]:
@@ -68,7 +69,7 @@ class Database:
             return response.data[0] if response.data else None
 
         except Exception as e:
-            print(f"❌ Error fetching lead: {e}")
+            logger.error(f"❌ Error fetching lead: {e}")
             return None
 
     def update_lead(self, lead_id: str, updates: Dict) -> Dict:
@@ -98,7 +99,7 @@ class Database:
             return response.data if response.data else []
 
         except Exception as e:
-            print(f"❌ Error fetching pending leads: {e}")
+            logger.error(f"❌ Error fetching pending leads: {e}")
             return []
 
     def delete_lead(self, lead_id: str) -> Dict:
@@ -156,5 +157,5 @@ class Database:
                 "leads_over_time": leads_over_time
             }
         except Exception as e:
-            print(f"❌ Error getting stats: {e}")
+            logger.error(f"❌ Error getting stats: {e}")
             return {"total": 0, "enriched": 0, "pending": 0, "failed": 0, "with_emails": 0, "industry_distribution": [], "leads_over_time": []}
