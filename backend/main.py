@@ -16,6 +16,7 @@ import logging
 
 from backend.config import settings
 from backend.routes.leads import router as leads_router
+from backend.routes.settings import router as settings_router
 from backend.schemas.lead import APIResponse
 from backend.logger import logger
 
@@ -73,6 +74,7 @@ app.add_middleware(
 # ── Routes ──────────────────────────────────────────
 
 app.include_router(leads_router, prefix="/api")
+app.include_router(settings_router, prefix="/api")
 
 
 # ── Health check ────────────────────────────────────
