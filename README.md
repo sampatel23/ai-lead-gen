@@ -10,15 +10,15 @@ Users can create leads, enrich records with company context, generate personaliz
 
 ## Screenshots
 
-![Dashboard](./screenshots/dashboard.png)
-![Leads](./screenshots/leads.png)
-![Analytics](./screenshots/analytics.png)
-![Settings](./screenshots/settings.png)
-
+![Dashboard](images/Dashboard.png)
+![Leads](images/Leads.png)
+![Analytical](images/Analytical.png)
+![Settings](images/Settings.png)
+![Architecture](images/Architecture.png)
 ## Live Demo
 
-- Frontend: https://your-frontend-url.vercel.app
-- Backend Swagger Docs: https://your-backend-url.onrender.com/docs
+- Frontend: https://ai-lead-gen-iota.vercel.app/
+- Backend: https://ai-lead-gen.onrender.com
 
 ## Core Features
 
