@@ -14,11 +14,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 import logging
 
-from backend.config import settings
-from backend.routes.leads import router as leads_router
-from backend.routes.settings import router as settings_router
-from backend.schemas.lead import APIResponse
-from backend.logger import logger
+from config import settings
+from routes.leads import router as leads_router
+from routes.settings import router as settings_router
+from schemas.lead import APIResponse
+from logger import logger
 
 
 # ── App ─────────────────────────────────────────────

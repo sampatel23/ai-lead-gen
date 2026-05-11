@@ -22,7 +22,7 @@ import os
 from src.api_client import LeadAPIClient
 
 load_dotenv()
-from backend.logger import logger
+from logger import logger
 
 
 class LeadGenBot:

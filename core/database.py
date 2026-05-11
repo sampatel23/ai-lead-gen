@@ -8,7 +8,7 @@ All business logic stays exactly as originally written.
 from supabase import create_client, Client
 import os
 from typing import Optional, List, Dict
-from backend.logger import logger
+from logger import logger
 
 
 class Database:

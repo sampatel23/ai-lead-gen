@@ -12,15 +12,15 @@ from core.database import Database
 from core.enrichment import LeadEnrichment
 from core.email_generator import EmailGenerator
 
-from backend.dependencies import get_db, get_enrichment, get_email_generator
-from backend.schemas.lead import (
+from dependencies import get_db, get_enrichment, get_email_generator
+from schemas.lead import (
     LeadCreate,
     LeadOut,
     StatsOut,
     APIResponse,
     GenerateEmailRequest,
 )
-from backend.logger import logger
+from logger import logger
 
 router = APIRouter(tags=["Leads"])
 

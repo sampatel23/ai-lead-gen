@@ -8,7 +8,7 @@ Strictly limits scraping to the homepage (and optionally /about) to remain fast.
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
-from backend.logger import logger
+from logger import logger
 
 class WebsiteScraper:
     def __init__(self, timeout: int = 10, max_chars: int = 4000):

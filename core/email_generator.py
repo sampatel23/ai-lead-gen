@@ -8,7 +8,7 @@ All prompts and generation logic stay exactly as originally written.
 from groq import Groq
 import os
 import json
-from backend.logger import logger
+from logger import logger
 
 
 class EmailGenerator:

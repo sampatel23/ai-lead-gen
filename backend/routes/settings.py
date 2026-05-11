@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
-from backend.config import settings
-from backend.logger import logger
+from config import settings
+from logger import logger
 from typing import Literal
 
 router = APIRouter(prefix="/settings", tags=["Settings"])

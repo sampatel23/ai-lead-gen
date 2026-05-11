@@ -12,7 +12,7 @@ import requests
 from typing import Dict
 import re
 import os
-from backend.logger import logger
+from logger import logger
 
 
 class LeadEnrichment:
